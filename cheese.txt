@@ -1,0 +1,142 @@
+import os
+
+😃
+os.chdir('/workspace/pring/fine-tune/');
+import torch
+import transformers
+print(os.getcwd())
+os.chdir('/workspace/pring/fine-tune/server/Async-Python-Server');
+print(os.getcwd())
+from api.llm.metapython import *
+from api.llm.installs import *
+importLib("pandas")
+from urllib.parse import quote
+from urllib.parse import unquote
+
+
+
+import gc
+torch.cuda.empty_cache()
+gc.collect()
+gc.collect()
+
+magic('nvidia-smi')
+
+import sys
+fromImport("datasets",["load_dataset"])
+fromImport("transformers",["AutoModelForCausalLM", "AutoTokenizer","BitsAndBytesConfig","HfArgumentParser","TrainingArguments","pipeline","logging"])
+fromImport("peft",["LoraConfig", "PeftModel"])
+from trl import SFTTrainer
+import time
+
+
+
+model_name = "Weblet/llama-2-usaaef2c"
+
+max_seq_length = 512 # Maximum sequence length to use
+device_map = {"": 0} #  Load the entire model on the GPU 0
+
+import gc
+gc.collect()
+gc.collect()
+
+import locale
+locale.getpreferredencoding = lambda: "UTF-8"
+
+model=AutoModelForCausalLM.from_pretrained(
+    model_name,
+    low_cpu_mem_usage=True,
+    return_dict=True,
+    torch_dtype=torch.float16,
+    device_map=device_map,
+    trust_remote_code=True
+)
+
+tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+tokenizer.pad_token = tokenizer.eos_token
+tokenizer.padding_side = "right" # Fix weird overflow issue with fp16 training
+
+logging.set_verbosity(logging.CRITICAL)
+
+prompt_seed = """You are a chatbot called Hawkeye with the purpose of serving USAA members.
+Your goal is to give sound financial advice to USAA members and to direct USAA members where to find additional resources to guide them through their financial journey."""
+#print(pipe(prompt_seed)[0]['generated_text'])
+
+pipe = pipeline(task="text-generation", model=model, tokenizer=tokenizer, max_length=max_seq_length)
+def talk(prompt):
+    result = pipe(f"<s>[INST] {prompt} [/INST]")
+    return result[0]['generated_text']
+def talks(prompt):
+    result = pipe(f"<s>[INST] {prompt_seed} this is a message from the member using the chat: {prompt} [/INST]")
+    return result[0]['generated_text']
+
+
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
+import http.client
+import asyncio
+import time
+import os
+from api.xpy import *
+import sys
+import socket
+import platform
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
+import asyncio
+from api.promises import *
+from api.excepts import *
+from api.xhttp import *
+from api.zfile import *
+from api.xpy import *
+import os
+import mimetypes
+mimetypes.init()
+
+
+
+class handler(BaseHTTPRequestHandler):
+
+  async def do_ASYNC(request, data):
+      print(f"Recieved {request.path}")
+      if(request.path.startswith('/talk')):
+          await zsendHeaders(request,{'status':200,'Content-type':'text/plain'})
+          content=talks(unquote(f"{at(request.path.split('/talk?'),1)}"))
+          text='';
+          print('responding')
+          for out in content:
+              str_out=f"{out}"
+              text=f"{text}{str_out}"
+              if('[/INST]'in str_out):str_out=str_out.split('[/INST]')[1]
+              if('[/INST]'in str_out):
+                  await zwriteResponseBody(request, b(str_out.split('[/INST]')[0]))
+                  print(text)
+                  break
+              await zwriteResponseBody(request, b(str_out))
+      else:
+          path = f"{os.getcwd()}{request.path}".split("?")[0].split("#")[0];
+          contentType = mimetypes.guess_type(path,strict=False)
+          print(path,contentType[0])
+          content = await zreadFileBytes(path)
+          await zsendHeaders(request,{'status':200,'Content-type':contentType[0]})
+          await zwriteResponseBody(request, content)
+
+  def do_METHOD(request):
+    asyncio.run(request.do_ASYNC(request))
+
+  do_GET = do_METHOD
+  do_OPTIONS = do_METHOD
+  do_POST = do_METHOD
+  do_PUT = do_METHOD
+  do_PATCH = do_METHOD
+  do_HEAD = do_METHOD
+  do_DELETE = do_METHOD
+  do_CONNECT = do_METHOD
+  do_TRACE = do_METHOD
+
+println("\n\nPlatform Node: ",platform.node())
+println("Version Info: ",sys.version_info)
+println("Hostname: ",socket.gethostname())
+println("FQDN: ",socket.getfqdn())
+
+httpd = ThreadingHTTPServer(('', 8080), handler)
+httpd.timeout = 30
+httpd.serve_forever()
