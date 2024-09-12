@@ -6,19 +6,19 @@ async function zfetchStream() {
   try { return await fetchStream(...arguments); } catch (e) { return new Response(e.message).body; }
 }
 globalThis.decoder = new TextDecoder();
-globalThis.decode = function() { return decoder.decode(...arguments); }
-globalThis.decoder.zdecode = function(raw) {
+globalThis.decode = function decode() { return decoder.decode(...arguments); }
+globalThis.decoder.zdecode = function zdecode(raw) {
   try {
     return globalThis.decoder.decode(raw);
   } catch (e) {
     return e.message;
   }
 }
-globalThis.zdecoder = function() {
+globalThis.zdecoder = function zdecoder() {
   if (!globalThis.decoder) {
     globalThis.decoder = new TextDecoder();
-    globalThis.decode = function() { return decoder.decode(...arguments); }
-    globalThis.decoder.zdecode = function(raw) {
+    globalThis.decode = function decode() { return decoder.decode(...arguments); }
+    globalThis.decoder.zdecode = function zdecode(raw) {
       try {
         return globalThis.decoder.decode(raw);
       } catch (e) {
@@ -28,19 +28,19 @@ globalThis.zdecoder = function() {
   }
   return globalThis.decoder;
 }
-globalThis.zdecode = function() { return decoder.zdecode(...arguments); }
+globalThis.zdecode = function zdecode() { return decoder.zdecode(...arguments); }
 
-globalThis.zgetReader = function(stream) {
+globalThis.zgetReader = function zgetReader(stream) {
   if (!stream) {
     return;
   }
-  let r = Object.create(null);
+  const r = Object.create(null);
   r.reader = stream.getReader();
   r.almostDone = false;
   return r;
 }
 
-globalThis.zread = async function(reader) {
+globalThis.zread = async function zread(reader) {
   if (reader.almostDone) {
     try {
       reader.reader.releaseLock();
@@ -51,7 +51,7 @@ globalThis.zread = async function(reader) {
     };
   }
   try {
-    let rtrn = await reader.reader.read();
+    const rtrn = await reader.reader.read();
     if (rtrn.done) {
       try {
         reader.reader.releaseLock();
@@ -80,7 +80,6 @@ globalThis.zread = async function(reader) {
 }
 
 void async function Main() {
-
   const stream = await zfetchStream('cheese.txt?' + new Date().getTime());
   const reader = zgetReader(stream);
   let result = await zread(reader);
