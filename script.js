@@ -3,7 +3,12 @@ async function fetchStream() {
 }
 
 async function zfetchStream() {
-  try { return await fetchStream(...arguments); } catch (e) { return new Response(e.message).body; }
+  try { 
+    return await fetchStream(...arguments); 
+  } catch (e) { 
+    console.warn(e,...arguments);
+    return new Response(e.message).body; 
+  }
 }
 globalThis.decoder = new TextDecoder();
 globalThis.decode = function decode() { return decoder.decode(...arguments); }
@@ -11,6 +16,7 @@ globalThis.decoder.zdecode = function zdecode(raw) {
   try {
     return globalThis.decoder.decode(raw);
   } catch (e) {
+    console.warn(e,...arguments);
     return e.message;
   }
 }
@@ -22,6 +28,7 @@ globalThis.zdecoder = function zdecoder() {
       try {
         return globalThis.decoder.decode(raw);
       } catch (e) {
+        console.warn(e,...arguments);
         return e.message;
       }
     }
@@ -44,7 +51,7 @@ globalThis.zread = async function zread(reader) {
   if (reader.almostDone) {
     try {
       reader.reader.releaseLock();
-    } catch (e) { }
+    } catch { }
     return {
       value: undefined,
       done: true
@@ -55,10 +62,11 @@ globalThis.zread = async function zread(reader) {
     if (rtrn.done) {
       try {
         reader.reader.releaseLock();
-      } catch (e) { }
+      } catch { }
     }
     return rtrn;
   } catch (e) {
+    console.warn(e,...arguments);
     reader.almostDone = true;
     return {
       value: e.message,
