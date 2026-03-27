@@ -3,39 +3,45 @@ async function fetchStream() {
 }
 
 async function zfetchStream() {
-  try { 
-    return await fetchStream(...arguments); 
-  } catch (e) { 
-    console.warn(e,...arguments);
-    return new Response(e.message).body; 
+  try {
+    return await fetchStream(...arguments);
+  } catch (e) {
+    console.warn(e, ...arguments);
+    return new Response(e.message).body;
   }
 }
 globalThis.decoder = new TextDecoder();
-globalThis.decode = function decode() { return decoder.decode(...arguments); }
+globalThis.decode = function decode() {
+  return decoder.decode(...arguments);
+}
 globalThis.decoder.zdecode = function zdecode(raw) {
   try {
     return globalThis.decoder.decode(raw);
   } catch (e) {
-    console.warn(e,...arguments);
+    console.warn(e, ...arguments);
     return e.message;
   }
 }
 globalThis.zdecoder = function zdecoder() {
   if (!globalThis.decoder) {
     globalThis.decoder = new TextDecoder();
-    globalThis.decode = function decode() { return decoder.decode(...arguments); }
+    globalThis.decode = function decode() {
+      return decoder.decode(...arguments);
+    }
     globalThis.decoder.zdecode = function zdecode(raw) {
       try {
         return globalThis.decoder.decode(raw);
       } catch (e) {
-        console.warn(e,...arguments);
+        console.warn(e, ...arguments);
         return e.message;
       }
     }
   }
   return globalThis.decoder;
 }
-globalThis.zdecode = function zdecode() { return decoder.zdecode(...arguments); }
+globalThis.zdecode = function zdecode() {
+  return decoder.zdecode(...arguments);
+}
 
 globalThis.zgetReader = function zgetReader(stream) {
   if (!stream) {
@@ -51,7 +57,7 @@ globalThis.zread = async function zread(reader) {
   if (reader.almostDone) {
     try {
       reader.reader.releaseLock();
-    } catch { }
+    } catch {}
     return {
       value: undefined,
       done: true
@@ -62,11 +68,11 @@ globalThis.zread = async function zread(reader) {
     if (rtrn.done) {
       try {
         reader.reader.releaseLock();
-      } catch { }
+      } catch {}
     }
     return rtrn;
   } catch (e) {
-    console.warn(e,...arguments);
+    console.warn(e, ...arguments);
     reader.almostDone = true;
     return {
       value: e.message,
@@ -76,13 +82,17 @@ globalThis.zread = async function zread(reader) {
 };
 
 (globalThis.window ?? {}).DOMInteractive = (fn) => {
-  fn ??= () => { };
+  fn ??= () => {};
   if ((globalThis.document?.readyState == 'complete') || (globalThis.document?.readyState == 'interactive')) {
     return fn();
   }
   return new Promise((resolve) => {
     (globalThis.document || globalThis).addEventListener("DOMContentLoaded", () => {
-      try { resolve(fn()); } catch (e) { resolve(e); }
+      try {
+        resolve(fn());
+      } catch (e) {
+        resolve(e);
+      }
     });
   });
 }
